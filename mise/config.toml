@@ -1,2 +1,14 @@
 [tools]
 golangci-lint = "2.13.2"
+
+[tasks.test]
+description = "Run tests"
+dir = "{{config_root}}"
+run = "go test -race ./..."
+alias = "t"
+
+[tasks.lint]
+description = "Run Go linter"
+dir = "{{config_root}}"
+run = "golangci-lint run"
+alias = "l"

@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -12,7 +13,7 @@ import (
 )
 
 //go:embed content/*
-var fs embed.FS
+var files embed.FS
 
 const outPath = "./dist/"
 
@@ -24,7 +25,11 @@ func main() {
 }
 
 func run(ctx context.Context) error {
-	g := generator.New(fs)
+	subFS, err := fs.Sub(files, "content")
+	if err != nil {
+		return fmt.Errorf("sub FS: %w", err)
+	}
+	g := generator.New(subFS)
 
 	site, err := g.Generate(ctx)
 	if err != nil {
@@ -42,6 +47,11 @@ func run(ctx context.Context) error {
 
 	for path, page := range site {
 		contentPath := filepath.Join(outPath, path)
+
+		if err = os.MkdirAll(filepath.Dir(contentPath), 0755); err != nil {
+			return fmt.Errorf("mkdir: %w", err)
+		}
+
 		fptr, err := os.Create(contentPath)
 		if err != nil {
 			return fmt.Errorf("create file %s: %w", contentPath, err)

@@ -4,6 +4,7 @@ package markdown
 import (
 	"fmt"
 	"io"
+	"time"
 
 	mdmeta "github.com/yuin/goldmark-meta/v2"
 	"github.com/yuin/goldmark/v2/ast"
@@ -13,7 +14,8 @@ import (
 
 // FrontMatter holds front matter metadata.
 type FrontMatter struct {
-	Title string `yaml:"title"`
+	Title       string
+	PublishedAt time.Time
 }
 
 // Parse parses the markdown file in source, and renders HTML to dest.
@@ -27,9 +29,11 @@ func Parse(dest io.Writer, fm *FrontMatter, source io.Reader) error {
 	doc := parser.Parse(bytes)
 
 	metadata := doc.(*ast.Document).Metadata()
-	buildFrontMatter(fm, metadata)
+	if err := buildFrontMatter(fm, metadata); err != nil {
+		return fmt.Errorf("build front matter: %w", err)
+	}
 
-	renderer := mdrenderer.New()
+	renderer := mdrenderer.New(mdrenderer.WithUnsafe())
 
 	if err := renderer.Render(dest, bytes, doc); err != nil {
 		return fmt.Errorf("render: %w", err)
@@ -40,8 +44,14 @@ func Parse(dest io.Writer, fm *FrontMatter, source io.Reader) error {
 
 // goldmark-meta does not expose front matter in a way that can be parsed into a
 // struct. For now, just do it manually.
-func buildFrontMatter(fm *FrontMatter, metadata map[string]any) {
+func buildFrontMatter(fm *FrontMatter, metadata map[string]any) error {
 	if s, ok := metadata["title"].(string); ok {
 		fm.Title = s
 	}
+
+	if t, ok := metadata["published_at"].(time.Time); ok {
+		fm.PublishedAt = t.UTC()
+	}
+
+	return nil
 }

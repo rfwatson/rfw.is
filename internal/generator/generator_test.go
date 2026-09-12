@@ -3,7 +3,9 @@ package generator_test
 import (
 	"embed"
 	"io"
+	"io/fs"
 	"testing"
+	"time"
 
 	"github.com/rfwatson/rfw.is/internal/generator"
 	"github.com/rfwatson/rfw.is/internal/markdown"
@@ -17,16 +19,22 @@ var siteSingleBlogPost embed.FS
 func TestGenerator(t *testing.T) {
 	testCases := []struct {
 		name     string
-		fs       embed.FS
+		fs       fs.FS
 		wantSite map[string]func(*testing.T, []byte, markdown.FrontMatter)
 		wantErr  string
 	}{
 		{
 			name: "single blog post",
-			fs:   siteSingleBlogPost,
+			fs:   mustBuildSubFS(t, siteSingleBlogPost, "testdata/site-single-blog-post"),
 			wantSite: map[string]func(*testing.T, []byte, markdown.FrontMatter){
-				"2026-01-01-hello-world.html": func(t *testing.T, bytes []byte, fm markdown.FrontMatter) {
+				"index.html": func(t *testing.T, bytes []byte, fm markdown.FrontMatter) {
+					assert.Equal(t, "Blog | rfw.is", fm.Title)
+					assert.Contains(t, string(bytes), "Hello world")
+					assert.Contains(t, string(bytes), "/2026-01-01-hello-world.html")
+				},
+				"blog/2026-01-01-hello-world.html": func(t *testing.T, bytes []byte, fm markdown.FrontMatter) {
 					assert.Equal(t, "Hello world", fm.Title)
+					assert.Equal(t, time.Date(2026, 1, 1, 10, 0, 0, 0, time.UTC), fm.PublishedAt)
 					assert.Equal(t, []byte("<h1>Hello world</h1>\n<p>This is a blog post.</p>\n"), bytes)
 				},
 			},
@@ -56,4 +64,13 @@ func TestGenerator(t *testing.T) {
 			}
 		})
 	}
+}
+
+func mustBuildSubFS(t *testing.T, files fs.FS, path string) fs.FS {
+	t.Helper()
+
+	subFS, err := fs.Sub(files, path)
+	require.NoError(t, err)
+
+	return subFS
 }
