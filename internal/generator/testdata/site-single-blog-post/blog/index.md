@@ -1,7 +1,7 @@
 ---
-title: Blog | rfw.is
+title: Blog
 ---
 
-# Blog posts
+# Posts
 
 {{ .Posts }}

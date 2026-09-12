@@ -6,11 +6,11 @@ import (
 	"cmp"
 	"context"
 	"fmt"
+	"html/template"
 	"io"
 	"io/fs"
 	"slices"
 	"strings"
-	"text/template"
 
 	"github.com/rfwatson/rfw.is/internal/markdown"
 )
@@ -18,6 +18,7 @@ import (
 // Generator generates a static site.
 type Generator struct {
 	fs        fs.FS
+	tmpl      *template.Template
 	blogPosts []Page
 }
 
@@ -29,8 +30,13 @@ type Page struct {
 }
 
 // New returns a new [*Generator].
-func New(fs fs.FS) *Generator {
-	return &Generator{fs: fs}
+func New(f fs.FS) (*Generator, error) {
+	tmpl, err := template.New("").ParseFS(f, "blog/*.md", "layouts/*.html.tmpl")
+	if err != nil {
+		return nil, fmt.Errorf("parse template: %w", err)
+	}
+
+	return &Generator{fs: f, tmpl: tmpl}, nil
 }
 
 // Generate generates the static site.
@@ -93,13 +99,13 @@ func (g *Generator) generateBlogIndex() (Page, error) {
 		fmt.Fprintf(&list, "- [%s](%s)\n", blogPost.FrontMatter.Title, blogPost.Path)
 	}
 
-	var listHTML bytes.Buffer
+	var postsHTML bytes.Buffer
 	var fm markdown.FrontMatter
-	if err := markdown.Parse(&listHTML, &fm, &list); err != nil {
+	if err := markdown.Parse(&postsHTML, &fm, &list); err != nil {
 		return Page{}, fmt.Errorf("parse list: %w", err)
 	}
 
-	page, err := g.generatePage("blog/index.md", map[string]any{"Posts": listHTML.String()})
+	page, err := g.generatePage("blog/index.md", map[string]any{"Posts": template.HTML(postsHTML.String())})
 	if err != nil {
 		return Page{}, err
 	}
@@ -118,40 +124,48 @@ func (g *Generator) generateBlogPost(path string) error {
 	return nil
 }
 
+// generatePage generates a full HTML page by combining a series of templates:
+//
+// 1. per-page markdown (render to HTML)
+// 2. wrap with html/template template and metadata tags, based on markdown content
+// 3. render the final HTML inside a layout
 func (g *Generator) generatePage(path string, data any) (Page, error) {
-	fptr, err := g.fs.Open(path)
+	md, err := g.fs.Open(path)
 	if err != nil {
-		return Page{}, fmt.Errorf("open file: %w", err)
+		return Page{}, fmt.Errorf("open markdown: %w", err)
 	}
-	defer fptr.Close() //nolint:errcheck
-
-	content, err := io.ReadAll(fptr)
-	if err != nil {
-		return Page{}, fmt.Errorf("read file: %w", err)
-	}
-
-	tmpl, err := template.New("").Parse(string(content))
-	if err != nil {
-		return Page{}, fmt.Errorf("parse template: %w", err)
-	}
-
-	var rendered bytes.Buffer
-	if err = tmpl.Execute(&rendered, data); err != nil {
-		return Page{}, fmt.Errorf("execute template: %w", err)
-	}
+	defer md.Close() //nolint:errcheck
 
 	var html bytes.Buffer
 	var fm markdown.FrontMatter
-	if err := markdown.Parse(&html, &fm, &rendered); err != nil {
+	if err = markdown.Parse(&html, &fm, md); err != nil {
 		return Page{}, fmt.Errorf("parse markdown: %w", err)
 	}
 
-	// TODO: this is brittle, use a regexp or something.
-	htmlPath := strings.ReplaceAll(path, ".md", ".html")
+	var postHTML strings.Builder
+	fmt.Fprintf(&postHTML, `{{- define "title"}}%s{{- end}}`, pageTitle(fm.Title))
+	postHTML.WriteString(`{{define "content" -}}`)
+	postHTML.Write(html.Bytes())
+	postHTML.WriteString(`{{- end}}`)
+
+	tmpl, err := g.tmpl.Clone()
+	if err != nil {
+		return Page{}, fmt.Errorf("clone templates: %w", err)
+	}
+
+	postTmpl, err := tmpl.Parse(postHTML.String())
+	if err != nil {
+		return Page{}, fmt.Errorf("new template: %w", err)
+	}
+
+	var pageHTML bytes.Buffer
+	if err := postTmpl.ExecuteTemplate(&pageHTML, "layout", data); err != nil {
+		return Page{}, fmt.Errorf("execute template: %w", err)
+	}
 
 	return Page{
-		Reader:      &html,
-		Path:        htmlPath,
+		Reader:      &pageHTML,
+		Path:        buildHTMLPath(path),
 		FrontMatter: fm,
 	}, nil
 }

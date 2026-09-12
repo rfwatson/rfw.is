@@ -29,7 +29,11 @@ func run(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("sub FS: %w", err)
 	}
-	g := generator.New(subFS)
+
+	g, err := generator.New(subFS)
+	if err != nil {
+		return fmt.Errorf("new generator: %w", err)
+	}
 
 	site, err := g.Generate(ctx)
 	if err != nil {

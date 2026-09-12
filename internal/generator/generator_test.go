@@ -20,22 +20,30 @@ func TestGenerator(t *testing.T) {
 	testCases := []struct {
 		name     string
 		fs       fs.FS
-		wantSite map[string]func(*testing.T, []byte, markdown.FrontMatter)
+		wantSite map[string]func(*testing.T, string, markdown.FrontMatter)
 		wantErr  string
 	}{
 		{
 			name: "single blog post",
 			fs:   mustBuildSubFS(t, siteSingleBlogPost, "testdata/site-single-blog-post"),
-			wantSite: map[string]func(*testing.T, []byte, markdown.FrontMatter){
-				"index.html": func(t *testing.T, bytes []byte, fm markdown.FrontMatter) {
-					assert.Equal(t, "Blog | rfw.is", fm.Title)
-					assert.Contains(t, string(bytes), "Hello world")
-					assert.Contains(t, string(bytes), "/2026-01-01-hello-world.html")
+			wantSite: map[string]func(*testing.T, string, markdown.FrontMatter){
+				"index.html": func(t *testing.T, content string, fm markdown.FrontMatter) {
+					assert.Equal(t, "Blog", fm.Title)
+
+					assert.Contains(t, content, "<html>")
+					assert.Contains(t, content, "<title>Blog | rfw.is</title>")
+
+					assert.Contains(t, content, "Hello world")
+					assert.Contains(t, content, "/2026-01-01-hello-world.html")
 				},
-				"blog/2026-01-01-hello-world.html": func(t *testing.T, bytes []byte, fm markdown.FrontMatter) {
+				"blog/2026-01-01-hello-world.html": func(t *testing.T, content string, fm markdown.FrontMatter) {
+					assert.Equal(t, "Hello world", fm.Title)
+
+					assert.Contains(t, content, "<html>")
+					assert.Contains(t, content, "<title>Hello world | rfw.is</title>")
+
 					assert.Equal(t, "Hello world", fm.Title)
 					assert.Equal(t, time.Date(2026, 1, 1, 10, 0, 0, 0, time.UTC), fm.PublishedAt)
-					assert.Equal(t, []byte("<h1>Hello world</h1>\n<p>This is a blog post.</p>\n"), bytes)
 				},
 			},
 		},
@@ -43,7 +51,9 @@ func TestGenerator(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			g := generator.New(tc.fs)
+			g, err := generator.New(tc.fs)
+			require.NoError(t, err)
+
 			site, err := g.Generate(t.Context())
 			if tc.wantErr != "" {
 				require.EqualError(t, err, tc.wantErr)
@@ -59,7 +69,7 @@ func TestGenerator(t *testing.T) {
 					bytes, err := io.ReadAll(page.Reader)
 					require.NoError(t, err)
 
-					assertFunc(t, bytes, page.FrontMatter)
+					assertFunc(t, string(bytes), page.FrontMatter)
 				}
 			}
 		})
