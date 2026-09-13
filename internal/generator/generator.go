@@ -9,6 +9,8 @@ import (
 	"html/template"
 	"io"
 	"io/fs"
+	"os/exec"
+	"path/filepath"
 	"slices"
 	"strings"
 
@@ -82,6 +84,16 @@ func (g *Generator) Generate(ctx context.Context) (map[string]Page, error) {
 	site["index.html"] = index
 
 	for _, page := range g.blogPosts {
+		site[page.Path] = page
+	}
+
+	// Finally, render scss.
+	cssPages, err := g.generateCSS(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("generate CSS: %w", err)
+	}
+
+	for _, page := range cssPages {
 		site[page.Path] = page
 	}
 
@@ -168,4 +180,51 @@ func (g *Generator) generatePage(path string, data any) (Page, error) {
 		Path:        buildHTMLPath(path),
 		FrontMatter: fm,
 	}, nil
+}
+
+func (g *Generator) generateCSS(ctx context.Context) ([]Page, error) {
+	var pages []Page
+
+	if err := fs.WalkDir(g.fs, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			return nil
+		}
+
+		if !strings.Contains(path, "static/") {
+			return nil
+		}
+
+		if !strings.HasSuffix(path, ".scss") {
+			return nil
+		}
+
+		f, err := g.fs.Open(path)
+		if err != nil {
+			return fmt.Errorf("open scss file: %w", err)
+		}
+		defer f.Close() //nolint:errcheck
+
+		var stdout, stderr bytes.Buffer
+		cmd := exec.CommandContext(ctx, "sass", "--stdin")
+		cmd.Stdin = f
+		cmd.Stdout = &stdout
+		cmd.Stderr = &stderr
+
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("run sass: %w (stderr: %s)", err, stderr.String())
+		}
+
+		outPath := strings.Replace(filepath.Base(path), ".scss", ".css", 1)
+		pages = append(pages, Page{Reader: &stdout, Path: outPath})
+
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("walk dir: %w", err)
+	}
+
+	return pages, nil
 }

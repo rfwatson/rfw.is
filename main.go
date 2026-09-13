@@ -15,7 +15,7 @@ import (
 //go:embed content/*
 var files embed.FS
 
-const outPath = "./dist/"
+const destPath = "./dist/"
 
 func main() {
 	if err := run(context.Background()); err != nil {
@@ -41,16 +41,16 @@ func run(ctx context.Context) error {
 	}
 
 	// TODO: extract to writer type
-	if err = os.RemoveAll(outPath); err != nil {
+	if err = os.RemoveAll(destPath); err != nil {
 		return fmt.Errorf("remove all: %w", err)
 	}
 
-	if err = os.MkdirAll(outPath, 0755); err != nil {
+	if err = os.MkdirAll(destPath, 0755); err != nil {
 		return fmt.Errorf("mkdir: %w", err)
 	}
 
 	for path, page := range site {
-		contentPath := filepath.Join(outPath, path)
+		contentPath := filepath.Join(destPath, path)
 
 		if err = os.MkdirAll(filepath.Dir(contentPath), 0755); err != nil {
 			return fmt.Errorf("mkdir: %w", err)

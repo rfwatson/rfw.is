@@ -45,6 +45,9 @@ func TestGenerator(t *testing.T) {
 					assert.Equal(t, "Hello world", fm.Title)
 					assert.Equal(t, time.Date(2026, 1, 1, 10, 0, 0, 0, time.UTC), fm.PublishedAt)
 				},
+				"main.css": func(t *testing.T, content string, _ markdown.FrontMatter) {
+					assert.Contains(t, content, "background-color: #ffffff")
+				},
 			},
 		},
 	}
@@ -60,7 +63,7 @@ func TestGenerator(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 
-				require.Len(t, site, len(tc.wantSite))
+				require.Len(t, site, len(tc.wantSite), "expected %d pages but got %d", len(tc.wantSite), len(site))
 
 				for path, page := range site {
 					assertFunc, ok := tc.wantSite[path]
