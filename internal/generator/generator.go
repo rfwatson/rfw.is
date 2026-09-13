@@ -100,7 +100,7 @@ func (g *Generator) generateBlogPosts() ([]Document, error) {
 			return nil
 		}
 
-		doc, err := g.generateHTML(path, nil)
+		doc, err := g.generateHTML(path, "layout_post", nil)
 		if err != nil {
 			return err
 		}
@@ -123,7 +123,13 @@ func (g *Generator) generateBlogIndex(blogPosts []Document) (Document, error) {
 
 	var list bytes.Buffer
 	for _, blogPost := range blogPosts {
-		fmt.Fprintf(&list, "- [%s](%s)\n", blogPost.FrontMatter.Title, blogPost.Path)
+		fmt.Fprintf(
+			&list,
+			"- %s - [%s](%s)\n",
+			blogPost.FrontMatter.PublishedAt.Format(dateFormatDateOnly),
+			blogPost.FrontMatter.Title,
+			blogPost.Path,
+		)
 	}
 
 	var postsHTML bytes.Buffer
@@ -132,13 +138,15 @@ func (g *Generator) generateBlogIndex(blogPosts []Document) (Document, error) {
 		return Document{}, fmt.Errorf("parse list: %w", err)
 	}
 
-	doc, err := g.generateHTML("blog/index.md", map[string]any{"Posts": template.HTML(postsHTML.String())})
+	doc, err := g.generateHTML("blog/index.md", "layout_index", map[string]any{"Posts": template.HTML(postsHTML.String())})
 	if err != nil {
 		return Document{}, err
 	}
 
 	return doc, nil
 }
+
+const dateFormatDateOnly = "2006-01-02"
 
 // generateHTML generates a full HTML document from the provided
 // markdown source in a series of transformations:
@@ -147,7 +155,7 @@ func (g *Generator) generateBlogIndex(blogPosts []Document) (Document, error) {
 //  2. wrap with html/template template and metadata tags, based on markdown and
 //     front mattercontent
 //  3. render the generated HTML inside a layout
-func (g *Generator) generateHTML(md string, data any) (Document, error) {
+func (g *Generator) generateHTML(md string, layout string, data any) (Document, error) {
 	f, err := g.fs.Open(md)
 	if err != nil {
 		return Document{}, fmt.Errorf("open markdown: %w", err)
@@ -160,8 +168,16 @@ func (g *Generator) generateHTML(md string, data any) (Document, error) {
 		return Document{}, fmt.Errorf("parse markdown: %w", err)
 	}
 
+	htmlPath := buildHTMLPath(md)
+
 	var postHTML strings.Builder
-	fmt.Fprintf(&postHTML, `{{- define "title"}}%s{{- end}}`, pageTitle(fm.Title))
+
+	fmt.Fprintf(&postHTML, `{{- define "title"}}%s{{- end}}`, fm.Title)
+	fmt.Fprintf(&postHTML, `{{- define "url"}}%s{{- end}}`, htmlPath)
+	fmt.Fprintf(&postHTML, `{{- define "page_title"}}%s{{- end}}`, pageTitle(fm.Title))
+	fmt.Fprintf(&postHTML, `{{- define "published_at"}}%s{{- end}}`, fm.PublishedAt.Format(dateFormatDateOnly))
+	fmt.Fprintf(&postHTML, `{{- define "layout"}}{{block "%s" . }}{{end}}{{- end}}`, layout)
+
 	postHTML.WriteString(`{{define "content" -}}`)
 	postHTML.Write(html.Bytes())
 	postHTML.WriteString(`{{- end}}`)
@@ -176,14 +192,14 @@ func (g *Generator) generateHTML(md string, data any) (Document, error) {
 		return Document{}, fmt.Errorf("new template: %w", err)
 	}
 
-	var pageHTML bytes.Buffer
-	if err := postTmpl.ExecuteTemplate(&pageHTML, "layout", data); err != nil {
+	var docHTML bytes.Buffer
+	if err := postTmpl.ExecuteTemplate(&docHTML, "layout_main", data); err != nil {
 		return Document{}, fmt.Errorf("execute template: %w", err)
 	}
 
 	return Document{
-		Content:     &pageHTML,
-		Path:        buildHTMLPath(md),
+		Content:     &docHTML,
+		Path:        htmlPath,
 		FrontMatter: fm,
 	}, nil
 }

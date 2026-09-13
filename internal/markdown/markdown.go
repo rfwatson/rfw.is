@@ -8,6 +8,7 @@ import (
 
 	mdmeta "github.com/yuin/goldmark-meta/v2"
 	"github.com/yuin/goldmark/v2/ast"
+	mdext "github.com/yuin/goldmark/v2/extension"
 	mdparser "github.com/yuin/goldmark/v2/parser"
 	mdrenderer "github.com/yuin/goldmark/v2/renderer/html"
 )
@@ -25,7 +26,7 @@ func Parse(dest io.Writer, fm *FrontMatter, source io.Reader) error {
 		return fmt.Errorf("read: %w", err)
 	}
 
-	parser := mdparser.New(mdparser.WithExtensions(mdmeta.Parser))
+	parser := mdparser.New(mdparser.WithExtensions(mdmeta.Parser, mdext.StrikethroughParser))
 	doc := parser.Parse(bytes)
 
 	metadata := doc.(*ast.Document).Metadata()
@@ -33,7 +34,7 @@ func Parse(dest io.Writer, fm *FrontMatter, source io.Reader) error {
 		return fmt.Errorf("build front matter: %w", err)
 	}
 
-	renderer := mdrenderer.New(mdrenderer.WithUnsafe())
+	renderer := mdrenderer.New(mdrenderer.WithUnsafe(), mdrenderer.WithExtensions(mdext.StrikethroughHTMLRenderer))
 
 	if err := renderer.Render(dest, bytes, doc); err != nil {
 		return fmt.Errorf("render: %w", err)

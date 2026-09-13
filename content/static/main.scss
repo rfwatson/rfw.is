@@ -1,5 +1,219 @@
-$white: #ffffff;
+// Variables
+
+$black: #262323;
+$white: #fff0f0;
+$grey: #cbc1b9;
+$charcoal: #403939;
+$paprika: #e25231;
+
+// Reset
+
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+div,
+span,
+object,
+iframe,
+figure,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+code,
+em,
+img,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+b,
+u,
+i,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+main,
+canvas,
+embed,
+footer,
+header,
+nav,
+section,
+video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  text-size-adjust: none;
+}
+
+footer,
+header,
+nav,
+section,
+main {
+  display: block;
+}
 
 body {
+  line-height: 1;
+}
+
+ol,
+ul {
+  list-style: none;
+}
+
+blockquote,
+q {
+  quotes: none;
+}
+
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+  content: '';
+  content: none;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+input {
+  -webkit-appearance: none;
+  border-radius: 0;
+}
+
+// Styles
+
+body {
+  background: linear-gradient($grey, $white);
+  font-size: 100%;
+}
+
+#container {
+  max-width: 700px;
+  margin: 0 auto;
   background-color: $white;
+  display: grid;
+  grid-template-rows: 100px 1fr 50px;
+  min-height: 100vh;
+  height: auto;
+  filter: drop-shadow(10px 10px 10px $charcoal);
+
+  font-family: 'Inter', sans-serif;
+  font-optical-sizing: auto;
+  font-weight: normal;
+  font-style: normal;
+}
+
+a,
+a:active,
+a:visited {
+  color: $paprika;
+  text-decoration: none;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  padding: 0px 20px;
+  background: $white;
+  font-family: 'Quantico';
+  font-size: 4rem;
+  font-weight: 500;
+  border-bottom: 10px solid $charcoal;
+
+  h1 {
+    a,
+    a:active,
+    a:visited {
+      color: $black;
+    }
+  }
+}
+
+main {
+  color: $black;
+  background-color: $white;
+  padding: 1rem 20px;
+  line-height: 1.25rem;
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    margin: 0.5rem 0;
+    line-height: 2rem;
+    font-weight: 500;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+
+  h2 {
+    font-size: 1.15rem;
+  }
+
+  p {
+    margin-bottom: 1rem;
+    font-size: 110%;
+    line-height: 1.25;
+
+    &.subhead {
+      color: $charcoal;
+      font-size: 0.9rem;
+      font-weight: 300;
+    }
+  }
+}
+
+footer {
+  display: grid;
+  align-items: center;
+  background-color: $charcoal;
+
+  p {
+    padding: 0px 20px;
+    font-size: 0.8rem;
+    color: $white;
+  }
 }

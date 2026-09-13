@@ -1,16 +1,30 @@
-{{define "layout" -}}
+{{define "layout_main" -}}
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="main.css">
 
-    <title>{{block "title" .}}{{end}}</title>
+    <link rel="stylesheet" type="text/css" href="/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Quantico:ital,wght@0,400;0,700;1,400;1,700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+
+    <title>{{block "page_title" .}}{{end}}</title>
   </head>
 
   <body>
-    {{block "content" .}}{{end}}
+    <div id="container">
+      <header>
+        <h1><a href="/">rfw.is</a></h1>
+      </header>
+      <main>
+        {{block "layout" .}}{{end}}
+      </main>
+      <footer>
+      <p>&copy; Rob Watson 2026.</p>
+      </footer>
+    </div>
   </body>
 </html>
 {{- end}}
