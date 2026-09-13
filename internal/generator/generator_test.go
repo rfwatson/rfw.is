@@ -63,16 +63,16 @@ func TestGenerator(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 
-				require.Len(t, site, len(tc.wantSite), "expected %d pages but got %d", len(tc.wantSite), len(site))
+				require.Len(t, site, len(tc.wantSite), "expected %d docs but got %d", len(tc.wantSite), len(site))
 
-				for path, page := range site {
+				for path, doc := range site {
 					assertFunc, ok := tc.wantSite[path]
 					require.Truef(t, ok, "no matching assert function for path %q", path)
 
-					bytes, err := io.ReadAll(page.Reader)
+					bytes, err := io.ReadAll(doc.Content)
 					require.NoError(t, err)
 
-					assertFunc(t, string(bytes), page.FrontMatter)
+					assertFunc(t, string(bytes), doc.FrontMatter)
 				}
 			}
 		})

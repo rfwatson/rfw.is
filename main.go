@@ -49,7 +49,7 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("mkdir: %w", err)
 	}
 
-	for path, page := range site {
+	for path, doc := range site {
 		contentPath := filepath.Join(destPath, path)
 
 		if err = os.MkdirAll(filepath.Dir(contentPath), 0755); err != nil {
@@ -61,7 +61,7 @@ func run(ctx context.Context) error {
 			return fmt.Errorf("create file %s: %w", contentPath, err)
 		}
 
-		if _, err = io.Copy(fptr, page.Reader); err != nil {
+		if _, err = io.Copy(fptr, doc.Content); err != nil {
 			fptr.Close() //nolint:errcheck
 			return fmt.Errorf("copy: %w", err)
 		}
