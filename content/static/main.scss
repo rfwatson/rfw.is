@@ -131,7 +131,7 @@ body {
   grid-template-rows: 100px 1fr 50px;
   min-height: 100vh;
   height: auto;
-  filter: drop-shadow(10px 10px 10px $charcoal);
+  filter: drop-shadow(5px 5px 10px $charcoal);
 
   font-family: 'Inter', sans-serif;
   font-optical-sizing: auto;
@@ -144,24 +144,41 @@ a:active,
 a:visited {
   color: $paprika;
   text-decoration: none;
+  outline: none;
 }
 
 header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: center;
-  padding: 0px 20px;
-  background: $white;
+  border-bottom: 10px solid $charcoal;
+
   font-family: 'Quantico';
   font-size: 4rem;
   font-weight: 500;
-  border-bottom: 10px solid $charcoal;
+  padding: 0 20px;
 
-  h1 {
+  > h1 {
+    background: $white;
+    height: 100%;
+    display: flex;
+    align-items: center;
+
     a,
     a:active,
     a:visited {
       color: $black;
     }
+  }
+
+  > nav {
+    height: 100%;
+    display: grid;
+    padding: 5px 0;
+    grid-auto-rows: auto;
+    font-size: 1.25rem;
+    font-weight: 400;
+    align-items: center;
   }
 }
 
@@ -169,16 +186,21 @@ main {
   color: $black;
   background-color: $white;
   padding: 1rem 20px;
-  line-height: 1.25rem;
+  line-height: 1.5rem;
+  font-size: 110%;
 
   h1,
   h2,
   h3,
   h4,
   h5 {
-    margin: 0.5rem 0;
+    margin: 1.5rem 0 0.5rem 0;
     line-height: 2rem;
     font-weight: 500;
+
+    &:first-child {
+      margin-top: 1rem;
+    }
   }
 
   h1 {
@@ -186,22 +208,44 @@ main {
   }
 
   h2 {
-    font-size: 1.25rem;
+    font-size: 1.75rem;
   }
 
-  h2 {
-    font-size: 1.15rem;
+  p,
+  ol,
+  ul,
+  blockquote {
+    margin-bottom: 1rem;
   }
 
   p {
-    margin-bottom: 1rem;
-    font-size: 110%;
-    line-height: 1.25;
-
     &.subhead {
       color: $charcoal;
       font-size: 0.9rem;
       font-weight: 300;
+    }
+  }
+
+  ol > li {
+    list-style-type: decimal;
+    list-style-position: inside;
+    margin-bottom: 0.125rem;
+  }
+
+  ul > li {
+    list-style-type: circle;
+    list-style-position: inside;
+    margin-bottom: 0.125rem;
+  }
+
+  blockquote {
+    background: $grey;
+    padding: 1.5rem;
+    font-style: italic;
+    border-left: 4px solid $paprika;
+
+    p {
+      margin-bottom: 0;
     }
   }
 }
