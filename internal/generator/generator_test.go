@@ -39,13 +39,20 @@ func TestGenerator(t *testing.T) {
 				},
 				"blog/2026-01-01-hello-world.html": func(t *testing.T, content string, fm markdown.FrontMatter) {
 					assert.Equal(t, "Hello world", fm.Title)
+					assert.Equal(t, time.Date(2026, 1, 1, 10, 0, 0, 0, time.UTC), fm.PublishedAt)
 
 					assert.Contains(t, content, "<html>")
 					assert.Contains(t, content, "<title>Hello world | rfw.is</title>")
 					assert.Contains(t, content, "Published 2026-01-01")
+				},
+				"about.html": func(t *testing.T, content string, fm markdown.FrontMatter) {
+					assert.Equal(t, "About me", fm.Title)
+					assert.Equal(t, time.Date(2026, 9, 12, 10, 0, 0, 0, time.UTC), fm.PublishedAt)
 
-					assert.Equal(t, "Hello world", fm.Title)
-					assert.Equal(t, time.Date(2026, 1, 1, 10, 0, 0, 0, time.UTC), fm.PublishedAt)
+					assert.Contains(t, content, "<html>")
+					assert.Contains(t, content, "<title>About me | rfw.is</title>")
+					assert.Contains(t, content, "Hello, world")
+					assert.NotContains(t, content, "Published")
 				},
 				"main.css": func(t *testing.T, content string, _ markdown.FrontMatter) {
 					assert.Contains(t, content, "background-color: #ffffff")

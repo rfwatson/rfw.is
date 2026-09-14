@@ -64,6 +64,15 @@ func (g *Generator) Generate(ctx context.Context) (Site, error) {
 	}
 	site["index.html"] = index
 
+	// Pages
+	pages, err := g.generatePages()
+	if err != nil {
+		return nil, fmt.Errorf("generate pages: %w", err)
+	}
+	for _, resource := range pages {
+		site[resource.Path] = resource
+	}
+
 	// CSS
 	cssDocs, err := g.generateCSS(ctx)
 	if err != nil {
@@ -113,6 +122,42 @@ func (g *Generator) generateBlogPosts() ([]Document, error) {
 	}
 
 	return blogPosts, nil
+}
+
+func (g *Generator) generatePages() ([]Document, error) {
+	var pages []Document
+
+	if err := fs.WalkDir(g.fs, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			return nil
+		}
+
+		// NOTE: for now, pages must be at root level of the content folder.
+		if strings.Contains(path, "/") {
+			return nil
+		}
+
+		if !strings.HasSuffix(path, ".md") {
+			return nil
+		}
+
+		doc, err := g.generateHTML(path, "layout_index", nil)
+		if err != nil {
+			return err
+		}
+
+		pages = append(pages, doc)
+
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("walk dir: %w", err)
+	}
+
+	return pages, nil
 }
 
 func (g *Generator) generateBlogIndex(blogPosts []Document) (Document, error) {
