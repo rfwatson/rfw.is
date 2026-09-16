@@ -13,3 +13,9 @@ description = "Run Go linter"
 dir = "{{config_root}}"
 run = "golangci-lint run"
 alias = "l"
+
+[tasks.deploy]
+description = "Deploy site"
+dir = "{{config_root}}"
+run = "rsync -av dist/* apps-gateway:/opt/caddy/sites/rfw.is"
+alias = "d"
