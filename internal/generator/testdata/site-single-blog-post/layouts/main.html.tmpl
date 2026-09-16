@@ -1,10 +1,8 @@
-{{define "layout_main" -}}
 <html>
   <head>
-    <title>{{block "page_title" .}}{{end}}</title>
+    <title>{{.PageTitle}}</title>
   </head>
   <body>
-    {{block "layout" .}}{{end}}
+    {{template "layout" .}}
   </body>
 </html>
-{{- end}}

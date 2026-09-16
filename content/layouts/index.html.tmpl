@@ -1,3 +1,5 @@
-{{define "layout_index" -}}
-{{block "content" .}}{{end}}
-{{- end}}
+<ul>
+{{ range $post := .Posts }}
+<li>{{ .PublishedAt }} <a href="{{.URL}}">{{ .Title }}</a></li>
+{{ end }}
+</ul>

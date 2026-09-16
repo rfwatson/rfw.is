@@ -1,7 +1,5 @@
-{{define "layout_post" -}}
-<h1><a href="/{{ block "url" . }}{{end}}">{{block "title" .}}{{end}}</a></h1>
+<h1><a href="{{.URL}}">{{.Title}}</a></h1>
 
-<p class="subhead">Published {{block "published_at" .}}{{end}}</p>
+<p class="subhead">Published {{.PublishedAt}}</p>
 
-{{block "content" .}}{{end}}
-{{- end}}
+{{.Content}}

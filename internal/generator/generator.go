@@ -109,7 +109,7 @@ func (g *Generator) generateBlogPosts() ([]Document, error) {
 			return nil
 		}
 
-		doc, err := g.generateHTML(path, "layout_post", nil)
+		doc, err := g.generateHTML(path, "post.html.tmpl", nil)
 		if err != nil {
 			return err
 		}
@@ -145,7 +145,7 @@ func (g *Generator) generatePages() ([]Document, error) {
 			return nil
 		}
 
-		doc, err := g.generateHTML(path, "layout_index", nil)
+		doc, err := g.generateHTML(path, "page.html.tmpl", nil)
 		if err != nil {
 			return err
 		}
@@ -166,24 +166,22 @@ func (g *Generator) generateBlogIndex(blogPosts []Document) (Document, error) {
 		return cmp.Compare(-a.FrontMatter.PublishedAt.Unix(), -b.FrontMatter.PublishedAt.Unix())
 	})
 
-	var list bytes.Buffer
-	for _, blogPost := range blogPosts {
-		fmt.Fprintf(
-			&list,
-			"- %s - [%s](%s)\n",
-			blogPost.FrontMatter.PublishedAt.Format(dateFormatDateOnly),
-			blogPost.FrontMatter.Title,
-			blogPost.Path,
-		)
+	type listPost struct {
+		Title       string
+		PublishedAt string
+		URL         string
 	}
 
-	var postsHTML bytes.Buffer
-	var fm markdown.FrontMatter
-	if err := markdown.Parse(&postsHTML, &fm, &list); err != nil {
-		return Document{}, fmt.Errorf("parse list: %w", err)
+	listPosts := make([]listPost, len(blogPosts))
+	for i, post := range blogPosts {
+		listPosts[i] = listPost{
+			Title:       post.FrontMatter.Title,
+			PublishedAt: post.FrontMatter.PublishedAt.Format(dateFormatDateOnly),
+			URL:         "/" + post.Path,
+		}
 	}
 
-	doc, err := g.generateHTML("blog/index.md", "layout_index", map[string]any{"Posts": template.HTML(postsHTML.String())})
+	doc, err := g.generateHTML("blog/index.md", "index.html.tmpl", map[string]any{"Posts": listPosts})
 	if err != nil {
 		return Document{}, err
 	}
@@ -200,7 +198,7 @@ const dateFormatDateOnly = "2006-01-02"
 //  2. wrap with html/template template and metadata tags, based on markdown and
 //     front mattercontent
 //  3. render the generated HTML inside a layout
-func (g *Generator) generateHTML(md string, layout string, data any) (Document, error) {
+func (g *Generator) generateHTML(md string, layoutName string, data map[string]any) (Document, error) {
 	f, err := g.fs.Open(md)
 	if err != nil {
 		return Document{}, fmt.Errorf("open markdown: %w", err)
@@ -215,30 +213,31 @@ func (g *Generator) generateHTML(md string, layout string, data any) (Document, 
 
 	htmlPath := buildHTMLPath(md)
 
-	var postHTML strings.Builder
+	if data == nil {
+		data = make(map[string]any)
+	}
 
-	fmt.Fprintf(&postHTML, `{{- define "title"}}%s{{- end}}`, fm.Title)
-	fmt.Fprintf(&postHTML, `{{- define "url"}}%s{{- end}}`, htmlPath)
-	fmt.Fprintf(&postHTML, `{{- define "page_title"}}%s{{- end}}`, pageTitle(fm.Title))
-	fmt.Fprintf(&postHTML, `{{- define "published_at"}}%s{{- end}}`, fm.PublishedAt.Format(dateFormatDateOnly))
-	fmt.Fprintf(&postHTML, `{{- define "layout"}}{{block "%s" . }}{{end}}{{- end}}`, layout)
-
-	postHTML.WriteString(`{{define "content" -}}`)
-	postHTML.Write(html.Bytes())
-	postHTML.WriteString(`{{- end}}`)
+	data["Title"] = fm.Title
+	data["PageTitle"] = pageTitle(fm.Title)
+	data["PublishedAt"] = fm.PublishedAt.Format(dateFormatDateOnly)
+	data["URL"] = "/" + htmlPath
+	data["Content"] = template.HTML(html.String())
 
 	tmpl, err := g.tmpl.Clone()
 	if err != nil {
-		return Document{}, fmt.Errorf("clone templates: %w", err)
+		return Document{}, fmt.Errorf("clone template: %w", err)
 	}
 
-	postTmpl, err := tmpl.Parse(postHTML.String())
-	if err != nil {
-		return Document{}, fmt.Errorf("new template: %w", err)
+	// layout is a dynamically created template which does nothing except execute
+	// another template matching the provided layoutName. In other words, it
+	// dynamically switches layout for this single cloned template set.
+	layout := fmt.Sprintf(`{{template "%s" .}}`, layoutName)
+	if tmpl, err = tmpl.New("layout").Parse(layout); err != nil {
+		return Document{}, fmt.Errorf("parse layout: %w", err)
 	}
 
 	var docHTML bytes.Buffer
-	if err := postTmpl.ExecuteTemplate(&docHTML, "layout_main", data); err != nil {
+	if err := tmpl.ExecuteTemplate(&docHTML, "main.html.tmpl", data); err != nil {
 		return Document{}, fmt.Errorf("execute template: %w", err)
 	}
 

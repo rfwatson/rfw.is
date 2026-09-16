@@ -1,7 +1,3 @@
 ---
 title: Blog
 ---
-
-# Posts
-
-{{ .Posts }}

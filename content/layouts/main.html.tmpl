@@ -1,4 +1,3 @@
-{{define "layout_main" -}}
 <!doctype html>
 <html lang="en">
   <head>
@@ -10,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Quantico:ital,wght@0,400;0,700;1,400;1,700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 
-    <title>{{block "page_title" .}}{{end}}</title>
+    <title>{{.PageTitle}}</title>
   </head>
 
   <body>
@@ -24,7 +23,7 @@
         </nav>
       </header>
       <main>
-        {{block "layout" .}}{{end}}
+      {{template "layout" .}}
       </main>
       <footer>
       <p>&copy; Rob Watson 2026.</p>
@@ -32,4 +31,3 @@
     </div>
   </body>
 </html>
-{{- end}}
