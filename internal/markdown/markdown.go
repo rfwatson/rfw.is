@@ -6,11 +6,13 @@ import (
 	"io"
 	"time"
 
+	chromahtml "github.com/alecthomas/chroma/v3/formatters/html"
+	highlighting "github.com/yuin/goldmark-highlighting/v3"
 	mdmeta "github.com/yuin/goldmark-meta/v2"
 	"github.com/yuin/goldmark/v2/ast"
-	mdext "github.com/yuin/goldmark/v2/extension"
+	"github.com/yuin/goldmark/v2/extension"
 	mdparser "github.com/yuin/goldmark/v2/parser"
-	mdrenderer "github.com/yuin/goldmark/v2/renderer/html"
+	"github.com/yuin/goldmark/v2/renderer/html"
 )
 
 // FrontMatter holds front matter metadata.
@@ -26,7 +28,12 @@ func Parse(dest io.Writer, fm *FrontMatter, source io.Reader) error {
 		return fmt.Errorf("read: %w", err)
 	}
 
-	parser := mdparser.New(mdparser.WithExtensions(mdmeta.Parser, mdext.StrikethroughParser))
+	parser := mdparser.New(mdparser.WithExtensions(
+		mdmeta.Parser,
+		extension.StrikethroughParser,
+		extension.TableParser,
+		highlighting.Parser,
+	))
 	doc := parser.Parse(bytes)
 
 	metadata := doc.(*ast.Document).Metadata()
@@ -34,7 +41,19 @@ func Parse(dest io.Writer, fm *FrontMatter, source io.Reader) error {
 		return fmt.Errorf("build front matter: %w", err)
 	}
 
-	renderer := mdrenderer.New(mdrenderer.WithUnsafe(), mdrenderer.WithExtensions(mdext.StrikethroughHTMLRenderer))
+	renderer := html.New(
+		html.WithUnsafe(),
+		html.WithExtensions(
+			extension.StrikethroughHTMLRenderer,
+			extension.TableHTMLRenderer,
+			highlighting.NewHTMLRenderer(
+				highlighting.WithStyle("gruvbox"),
+				highlighting.WithFormatterOptions(
+					chromahtml.WithLineNumbers(true),
+				),
+			),
+		),
+	)
 
 	if err := renderer.Render(dest, bytes, doc); err != nil {
 		return fmt.Errorf("render: %w", err)

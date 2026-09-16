@@ -248,6 +248,33 @@ main {
       margin-bottom: 0;
     }
   }
+
+  code,
+  pre {
+    font-family: 'Roboto Mono', monospace;
+    font-optical-sizing: auto;
+    font-size: 87.5%;
+    font-weight: 500;
+  }
+
+  > code {
+    background: $white;
+    display: inline-block;
+    padding: 0px 1px;
+    color: $charcoal;
+
+    &::selection,
+    &::-moz-selection,
+    &::-webkit-selection {
+      background: $charcoal;
+      color: $white;
+    }
+  }
+
+  pre {
+    line-height: 1rem;
+    overflow-x: scroll;
+  }
 }
 
 footer {
