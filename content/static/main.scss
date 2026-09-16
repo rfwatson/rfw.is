@@ -6,6 +6,8 @@ $grey: #cbc1b9;
 $charcoal: #403939;
 $paprika: #e25231;
 
+$max_width: 700px;
+
 // Reset
 
 *,
@@ -118,13 +120,21 @@ input {
 
 // Styles
 
+*::selection,
+*::-moz-selection,
+*::-webkit-selection {
+  background: $grey;
+  color: $black;
+}
+
 body {
   background: linear-gradient($grey, $white);
+  background-attachment: fixed;
   font-size: 100%;
 }
 
 #container {
-  max-width: 700px;
+  max-width: $max_width;
   margin: 0 auto;
   background-color: $white;
   display: grid;
@@ -144,6 +154,7 @@ a:active,
 a:visited {
   color: $paprika;
   text-decoration: none;
+  font-weight: 500;
   outline: none;
 }
 
@@ -177,7 +188,7 @@ header {
     padding: 5px 0;
     grid-auto-rows: auto;
     font-size: 1.25rem;
-    font-weight: 400;
+    font-weight: normal;
     align-items: center;
   }
 }
@@ -186,17 +197,23 @@ main {
   color: $black;
   background-color: $white;
   padding: 1rem 20px;
-  line-height: 1.5rem;
-  font-size: 110%;
+  line-height: 1.5;
+  font-size: 107.5%;
+  width: $max_width;
+  padding-bottom: 100px;
 
   h1,
   h2,
   h3,
   h4,
   h5 {
-    margin: 1.5rem 0 0.5rem 0;
-    line-height: 2rem;
-    font-weight: 500;
+    line-height: 2.5rem;
+
+    > a,
+    a:active,
+    a:visited {
+      font-weight: inherit;
+    }
 
     &:first-child {
       margin-top: 1rem;
@@ -204,16 +221,24 @@ main {
   }
 
   h1 {
-    font-size: 2rem;
+    font-size: 2.25rem;
+    font-weight: 700;
   }
 
   h2 {
-    font-size: 1.75rem;
+    font-size: 1.875rem;
+    font-weight: 600;
+  }
+
+  h3 {
+    font-size: 1.333rem;
+    font-weight: 500;
   }
 
   p,
-  ol,
-  ul,
+  pre,
+  > ol,
+  > ul,
   blockquote {
     margin-bottom: 1rem;
   }
@@ -223,7 +248,22 @@ main {
       color: $charcoal;
       font-size: 0.9rem;
       font-weight: 300;
+      margin-top: 0.5rem;
     }
+  }
+
+  em {
+    font-style: italic;
+  }
+
+  ul.posts {
+    margin-top: 1rem;
+  }
+
+  ul,
+  ol {
+    line-height: 1.333;
+    padding-inline-start: 30px;
   }
 
   ol > li {
@@ -233,14 +273,14 @@ main {
   }
 
   ul > li {
-    list-style-type: circle;
+    list-style-type: disc;
     list-style-position: inside;
     margin-bottom: 0.125rem;
   }
 
   blockquote {
-    background: $grey;
-    padding: 1.5rem;
+    background: $white;
+    padding: 1rem;
     font-style: italic;
     border-left: 4px solid $paprika;
 
@@ -275,6 +315,22 @@ main {
     line-height: 1rem;
     overflow-x: scroll;
   }
+
+  table {
+    th,
+    td {
+      &:not(:last-child) {
+        border-right: 20px solid transparent;
+      }
+    }
+
+    thead {
+      th {
+        font-weight: 500;
+        text-align: left;
+      }
+    }
+  }
 }
 
 footer {
@@ -286,5 +342,12 @@ footer {
     padding: 0px 20px;
     font-size: 0.8rem;
     color: $white;
+
+    a,
+    a:active,
+    a:visited {
+      color: $white;
+      font-weight: 500;
+    }
   }
 }
