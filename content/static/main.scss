@@ -1,7 +1,8 @@
 // Variables
 
 $black: #262323;
-$white: #fff0f0;
+$white: #ffffff;
+$off_white: #fff0f0;
 $grey: #cbc1b9;
 $charcoal: #403939;
 $paprika: #e25231;
@@ -128,7 +129,7 @@ input {
 }
 
 body {
-  background: linear-gradient($grey, $white);
+  background: $grey;
   background-attachment: fixed;
   font-size: 100%;
 }
@@ -279,7 +280,7 @@ main {
   }
 
   blockquote {
-    background: $white;
+    background: $off_white;
     padding: 1rem;
     font-style: italic;
     border-left: 4px solid $paprika;
@@ -297,8 +298,8 @@ main {
     font-weight: 500;
   }
 
-  > code {
-    background: $white;
+  p > code {
+    background: $off_white;
     display: inline-block;
     padding: 0px 1px;
     color: $charcoal;
@@ -307,7 +308,7 @@ main {
     &::-moz-selection,
     &::-webkit-selection {
       background: $charcoal;
-      color: $white;
+      color: $off_white;
     }
   }
 
@@ -341,12 +342,12 @@ footer {
   p {
     padding: 0px 20px;
     font-size: 0.8rem;
-    color: $white;
+    color: $off_white;
 
     a,
     a:active,
     a:visited {
-      color: $white;
+      color: $off_white;
       font-weight: 500;
     }
   }
